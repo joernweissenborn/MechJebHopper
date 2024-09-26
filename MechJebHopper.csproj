@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net472</TargetFramework> <!-- Targeting .NET Framework 4.7.2 -->
+    <AssemblyName>MechJebHopper</AssemblyName>
+    <RootNamespace>MechJebHopper</RootNamespace>
+    <OutputPath>..\..\GameData\MechJebHopper\Plugins\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference KSP and Unity assemblies -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>../../KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>../../KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>../../KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>../../KSP_x64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>../../KSP_x64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>../../KSP_x64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>../../KSP_x64_Data/Managed/UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>../../KSP_x64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <!-- Reference MechJeb -->
+    <Reference Include="MechJeb2">
+      <HintPath>..\MechJeb2\Plugins\MechJeb2.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
