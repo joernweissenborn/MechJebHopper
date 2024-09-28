@@ -1,4 +1,5 @@
 KSP.log
 obj/
+dist/
 Plugins/
 .vscode/

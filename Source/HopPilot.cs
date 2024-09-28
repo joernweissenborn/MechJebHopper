@@ -5,10 +5,12 @@ using UnityEngine;
 
 namespace Hopper
 {
-    public class HopGuidanceAscendPilot : AutopilotModule
+    public class HopPilot : AutopilotModule
     {
-        private MechJebModuleRoverController _roverController;
-        private MechJebModuleLandingPredictions _landingPredictions;
+        private readonly MechJebModuleRoverController _roverController;
+        private readonly MechJebModuleLandingPredictions _landingPredictions;
+
+        public static double CloseDistance => 1000;
 
         public Vector3 Current => core.vessel.ReferenceTransform.position;
         public double CurrentLatitude => core.vessel.mainBody.GetLatitude(Current);
@@ -22,12 +24,17 @@ namespace Hopper
         public double DistanceToTarget => Vector3d.Distance(Current, Target);
         public bool UseCorrectedHeading { get; set; }
         public bool AdaptiveHeading { get; set; }
-        public bool PerformCourseCorrection { get; set; }
-        public double Angle { get; set; }
+        public bool PerformCourseCorrection = false;
+        public double WantedHeading => UseCorrectedHeading ? AdjustedHeading() : Heading;
+        public readonly EditableInt Angle = 45;
+        public readonly EditableDouble MaxError = 20;
+        public readonly EditableDouble ImpactDelta = 0;
+        public bool AscendOnly = false;
 
         // a timer to keep track of the time since starting the hop
-        private Stopwatch _hopTimer;
+        private readonly Stopwatch _hopTimer;
         public double TimeSinceHop => _hopTimer?.Elapsed.TotalSeconds ?? 0;
+        public double TimeToLand => _landingPredictions.Result != null ? _landingPredictions.Result.endUT - Planetarium.GetUniversalTime() : 0;
 
         public double Heading => _roverController.HeadingToPos(Current, Target);
         public AbsoluteVector PredictedImpact
@@ -44,7 +51,7 @@ namespace Hopper
 
         public double ImpactDistanceToTarget => surfaceDistance(PredictedImpact.latitude, PredictedImpact.longitude, TargetLatitude, TargetLongitude);
 
-        public HopGuidanceAscendPilot(MechJebCore core) : base(core)
+        public HopPilot(MechJebCore core) : base(core)
         {
             _roverController = core.GetComputerModule<MechJebModuleRoverController>();
             if (_roverController == null)
@@ -56,8 +63,6 @@ namespace Hopper
             {
                 throw new Exception("[HopGuidanceAscendPilot] Landing predictions not found.");
             }
-            _landingPredictions.users.Add(this);
-            Angle = 45;
             _hopTimer = new Stopwatch();
         }
 
@@ -65,6 +70,7 @@ namespace Hopper
         {
             //core.attitude.users.Add(this);
             core.thrust.users.Add(this);
+            _landingPredictions.users.Add(this);
         }
 
         public override void OnModuleDisabled()
@@ -73,13 +79,21 @@ namespace Hopper
             core.thrust.users.Remove(this);
             core.attitude.attitudeDeactivate();
             core.attitude.users.Remove(this);
+            _landingPredictions.users.Remove(this);
         }
 
         public void Hop(object controller)
         {
-            _hopTimer.Start();
             users.Add(controller);
-            setStep(new AscendStep(core, UseCorrectedHeading ? AdjustedHeading() : Heading));
+            _hopTimer.Start();
+            setStep(new Ascend(core));
+        }
+
+        public void EndHop()
+        {
+            _hopTimer.Stop();
+            users.Clear();
+            setStep(null);
         }
 
         public double EstimateTimeOfFlight()
