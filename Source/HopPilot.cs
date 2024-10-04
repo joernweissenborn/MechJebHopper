@@ -19,8 +19,6 @@ namespace MechJebHopper
         public Vector3 Target => core.vessel.targetObject?.GetTransform().position ?? Vector3.zero;
         public double TargetLatitude => core.vessel.mainBody.GetLatitude(Target);
         public double TargetLongitude => core.vessel.mainBody.GetLongitude(Target);
-        public double TargetAltitude => core.vessel.mainBody.GetAltitude(Target);
-        public double AdjustedTargetLongitude => core.vessel.mainBody.GetLongitude(AdjustedTarget());
         public double DistanceToTarget => Vector3d.Distance(Current, Target);
         public bool UseCorrectedHeading { get; set; }
         public bool AdaptiveHeading { get; set; }
@@ -49,7 +47,7 @@ namespace MechJebHopper
             }
         }
 
-        public double ImpactDistanceToTarget => surfaceDistance(PredictedImpact.latitude, PredictedImpact.longitude, TargetLatitude, TargetLongitude);
+        public double ImpactDistanceToTarget => SurfaceDistance(PredictedImpact.latitude, PredictedImpact.longitude, TargetLatitude, TargetLongitude);
 
         public HopPilot(MechJebCore core) : base(core)
         {
@@ -135,9 +133,9 @@ namespace MechJebHopper
 
             return Target + relativeMovement;
         }
-        public double AdjustedHeading() => _roverController.HeadingToPos(Current, AdjustedTarget());
+        public double AdjustedHeading() => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, AdjustedTarget()));
 
-        private double surfaceDistance(double lat1, double lon1, double lat2, double lon2)
+        private double SurfaceDistance(double lat1, double lon1, double lat2, double lon2)
         {
             // Haversine formula to calculate the distance between two points on the surface of a sphere
             double dLat = (lat2 - lat1) * Math.PI / 180.0;

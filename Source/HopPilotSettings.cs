@@ -63,37 +63,37 @@ namespace MechJebHopper
         {
             if (core.target.PositionTargetExists)
             {
-                void moveByMeter(ref EditableAngle angle, double distance, double Alt)
+                void MoveByMeter(ref EditableAngle angle, double distance, double Alt)
                 {
                     double angularDelta = distance * UtilMath.Rad2Deg / (Alt + mainBody.Radius);
                     angle += angularDelta;
                 }
 
-                var ASL = core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude);
+                double asl = core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude);
                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label1"));//Target coordinates:
 
                 GUILayout.BeginHorizontal();
                 core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
                 if (GUILayout.Button("▲"))
                 {
-                    moveByMeter(ref core.target.targetLatitude, 10, ASL);
+                    MoveByMeter(ref core.target.targetLatitude, 10, asl);
                 }
                 GUILayout.Label("10m");
                 if (GUILayout.Button("▼"))
                 {
-                    moveByMeter(ref core.target.targetLatitude, -10, ASL);
+                    MoveByMeter(ref core.target.targetLatitude, -10, asl);
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
                 if (GUILayout.Button("◄"))
                 {
-                    moveByMeter(ref core.target.targetLongitude, -10, ASL);
+                    MoveByMeter(ref core.target.targetLongitude, -10, asl);
                 }
                 GUILayout.Label("10m");
                 if (GUILayout.Button("►"))
                 {
-                    moveByMeter(ref core.target.targetLongitude, 10, ASL);
+                    MoveByMeter(ref core.target.targetLongitude, 10, asl);
                 }
                 GUILayout.EndHorizontal();
 

@@ -75,7 +75,7 @@ namespace MechJebHopper
     {
 
         bool courseCorrectionBurning = false;
-        private HopPilot _hopPilot;
+        private readonly HopPilot _hopPilot;
 
         public CourseCorrection(MechJebCore core) : base(core)
         {
@@ -100,8 +100,8 @@ namespace MechJebHopper
 
             if (courseCorrectionBurning)
             {
-                const double timeConstant = 2.0;
-                core.thrust.ThrustForDV(deltaV.magnitude, timeConstant);
+                const double TIMECONSTANT = 2.0;
+                core.thrust.ThrustForDV(deltaV.magnitude, TIMECONSTANT);
             }
             else
             {
@@ -135,7 +135,7 @@ namespace MechJebHopper
     public class Land : FinalDescent
     {
 
-        private HopPilot _ascendPilot;
+        private readonly HopPilot _ascendPilot;
         public Land(MechJebCore core) : base(core)
         {
             _ascendPilot = core.GetComputerModule<HopPilot>();
