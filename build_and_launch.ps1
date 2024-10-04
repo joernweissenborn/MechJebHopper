@@ -8,6 +8,11 @@ $projectPath = Get-Location
 Write-Host "Navigating to project directory: $projectPath"
 Set-Location -Path $projectPath
 
+# delete dist/ folder if exists
+if (Test-Path -Path "dist") {
+	Remove-Item -Path "dist" -Recurse -Force
+}
+
 # Run the dotnet build command and capture the output
 Write-Host "Building the project..."
 $buildOutput = dotnet build 2>&1
@@ -22,7 +27,8 @@ if ($buildOutput -match "Build succeeded.") {
 	
 	# Launch the KSP executable
 	Start-Process -FilePath $kspExecutablePath
-} else {
+}
+else {
 	Write-Host "Build failed. Please check the error messages above."
 }
 

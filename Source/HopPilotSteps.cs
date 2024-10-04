@@ -3,7 +3,7 @@ using MuMech;
 using MuMech.Landing;
 using System;
 
-namespace Hopper
+namespace MechJebHopper
 {
     public class Ascend : AutopilotStep
     {
@@ -11,14 +11,16 @@ namespace Hopper
         private double _targetHeading;
         private double _lastDistance;
         private readonly bool _startClose;
+        private readonly double _halfDistance;
 
-        private HopPilot _hopPilot;
+        private readonly HopPilot _hopPilot;
         public Ascend(MechJebCore core) : base(core)
         {
             _hopPilot = core.GetComputerModule<HopPilot>();
             _lastDistance = _hopPilot.ImpactDistanceToTarget;
             _targetHeading = _hopPilot.WantedHeading;
-            _startClose = _lastDistance <= HopPilot.CloseDistance;
+            _startClose = _lastDistance <= HopPilot.CloseDistance * 2;
+            _halfDistance = _lastDistance / 2;
         }
 
         public override AutopilotStep Drive(FlightCtrlState s)
@@ -26,7 +28,6 @@ namespace Hopper
             if (_hopPilot.AdaptiveHeading) _targetHeading = _hopPilot.WantedHeading;
             Quaternion attitude = Quaternion.AngleAxis((float)_targetHeading, Vector3.up)
                                     * Quaternion.AngleAxis(-(float)_hopPilot.Angle, Vector3.right);
-                                    //* Quaternion.AngleAxis(-(float)0, Vector3.forward);
             AttitudeReference reference = AttitudeReference.SURFACE_NORTH;
             core.attitude.attitudeTo(attitude, reference, _hopPilot, true, true, false);
 
@@ -50,13 +51,17 @@ namespace Hopper
 
             double impactDistance = _hopPilot.ImpactDistanceToTarget;
             double deltaDistance = impactDistance - _lastDistance;
-            if (deltaDistance > _hopPilot.ImpactDelta && vessel.altitude > 10)
+            if (impactDistance < _halfDistance && deltaDistance > _hopPilot.ImpactDelta)
             {
-                Debug.Log("[Hopper] Impact distance increasing, aborting hop." + _hopPilot.AscendOnly);
+                //Debug.Log("[Hopper] Impact distance increasing, aborting hop.");
+                //Debug.Log("[Hopper] Distance: " + impactDistance);
+                //Debug.Log("[Hopper] Delta: " + deltaDistance);
+                //Debug.Log("[Hopper] Last distance: " + _lastDistance);
+                //Debug.Log("[Hopper] Half distance: " + _halfDistance);
                 core.thrust.ThrustOff();
                 if (_hopPilot.PerformCourseCorrection) return new CourseCorrection(core);
                 if (!_hopPilot.AscendOnly) return new CoastToApoapsis(core);
-                Debug.Log("[Hopper] Ending hop.");
+                //Debug.Log("[Hopper] Ending hop.");
                 _hopPilot.EndHop();
                 return null;
             }

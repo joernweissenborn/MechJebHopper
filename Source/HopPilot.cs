@@ -3,7 +3,7 @@ using System.Diagnostics;
 using MuMech;
 using UnityEngine;
 
-namespace Hopper
+namespace MechJebHopper
 {
     public class HopPilot : AutopilotModule
     {
@@ -36,7 +36,7 @@ namespace Hopper
         public double TimeSinceHop => _hopTimer?.Elapsed.TotalSeconds ?? 0;
         public double TimeToLand => _landingPredictions.Result != null ? _landingPredictions.Result.endUT - Planetarium.GetUniversalTime() : 0;
 
-        public double Heading => _roverController.HeadingToPos(Current, Target);
+        public double Heading => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, Target));
         public AbsoluteVector PredictedImpact
         {
             get

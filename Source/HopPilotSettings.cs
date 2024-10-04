@@ -2,7 +2,7 @@ using KSP.Localization;
 using MuMech;
 using UnityEngine;
 
-namespace Hopper
+namespace MechJebHopper
 {
     public class HopPilotSettings : DisplayModule
     {
