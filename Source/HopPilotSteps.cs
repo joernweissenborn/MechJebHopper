@@ -9,18 +9,14 @@ namespace MechJebHopper
     {
 
         private double _targetHeading;
-        private double _lastDistance;
         private readonly bool _startClose;
-        private readonly double _halfDistance;
 
         private readonly HopPilot _hopPilot;
         public Ascend(MechJebCore core) : base(core)
         {
             _hopPilot = core.GetComputerModule<HopPilot>();
-            _lastDistance = _hopPilot.ImpactDistanceToTarget;
             _targetHeading = _hopPilot.WantedHeading;
-            _startClose = _lastDistance <= HopPilot.CloseDistance * 2;
-            _halfDistance = _lastDistance / 2;
+            _startClose = _hopPilot.ImpactDistanceToTarget <= HopPilot.CloseDistance * 2;
         }
 
         public override AutopilotStep Drive(FlightCtrlState s)
@@ -38,34 +34,23 @@ namespace MechJebHopper
             }
             else
             {
-                double impactDistance = _hopPilot.ImpactDistanceToTarget;
-                core.thrust.targetThrottle = impactDistance < HopPilot.CloseDistance ? 0.1F : 1F;
+                core.thrust.targetThrottle = _hopPilot.RelDistanceToImpactDelta < HopPilot.CloseDistance ? 0.1F : 1F;
             }
-            status = $"Hopping at throttle {core.thrust.targetThrottle} at heading {_targetHeading}°";
+            status = $"Hopping at throttle {core.thrust.targetThrottle} at heading {_targetHeading:F3}°";
             return this;
 
         }
 
         public override AutopilotStep OnFixedUpdate()
         {
-
-            double impactDistance = _hopPilot.ImpactDistanceToTarget;
-            double deltaDistance = impactDistance - _lastDistance;
-            if (impactDistance < _halfDistance && deltaDistance > _hopPilot.ImpactDelta)
+            if (_hopPilot.RelDistanceToImpactDelta <= 0)
             {
-                //Debug.Log("[Hopper] Impact distance increasing, aborting hop.");
-                //Debug.Log("[Hopper] Distance: " + impactDistance);
-                //Debug.Log("[Hopper] Delta: " + deltaDistance);
-                //Debug.Log("[Hopper] Last distance: " + _lastDistance);
-                //Debug.Log("[Hopper] Half distance: " + _halfDistance);
                 core.thrust.ThrustOff();
                 if (_hopPilot.PerformCourseCorrection) return new CourseCorrection(core);
                 if (!_hopPilot.AscendOnly) return new CoastToApoapsis(core);
-                //Debug.Log("[Hopper] Ending hop.");
                 _hopPilot.EndHop();
                 return null;
             }
-            _lastDistance = impactDistance;
             return this;
         }
 
@@ -74,7 +59,7 @@ namespace MechJebHopper
     public class CourseCorrection : AutopilotStep
     {
 
-        bool courseCorrectionBurning = false;
+        bool _courseCorrectionBurning = false;
         private readonly HopPilot _hopPilot;
 
         public CourseCorrection(MechJebCore core) : base(core)
@@ -94,11 +79,11 @@ namespace MechJebHopper
             core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, _hopPilot);
 
             if (core.attitude.attitudeAngleFromTarget() < 2)
-                courseCorrectionBurning = true;
+                _courseCorrectionBurning = true;
             else if (core.attitude.attitudeAngleFromTarget() > 30)
-                courseCorrectionBurning = false;
+                _courseCorrectionBurning = false;
 
-            if (courseCorrectionBurning)
+            if (_courseCorrectionBurning)
             {
                 const double TIMECONSTANT = 2.0;
                 core.thrust.ThrustForDV(deltaV.magnitude, TIMECONSTANT);
@@ -143,7 +128,7 @@ namespace MechJebHopper
 
         public override AutopilotStep Drive(FlightCtrlState s)
         {
-            var nextStep = base.Drive(s);
+            AutopilotStep nextStep = base.Drive(s);
             if (vessel.LandedOrSplashed) _ascendPilot.EndHop();
             return nextStep;
         }

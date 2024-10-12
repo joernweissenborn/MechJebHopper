@@ -15,26 +15,37 @@ namespace MechJebHopper
         public Vector3 Current => core.vessel.ReferenceTransform.position;
         public double CurrentLatitude => core.vessel.mainBody.GetLatitude(Current);
         public double CurrentLongitude => core.vessel.mainBody.GetLongitude(Current);
-        public double CurrentAltitude => core.vessel.mainBody.GetAltitude(Current);
         public Vector3 Target => core.vessel.targetObject?.GetTransform().position ?? Vector3.zero;
         public double TargetLatitude => core.vessel.mainBody.GetLatitude(Target);
         public double TargetLongitude => core.vessel.mainBody.GetLongitude(Target);
+        public double TargetAltitude => core.vessel.mainBody.GetAltitude(Target);
         public double DistanceToTarget => Vector3d.Distance(Current, Target);
-        public bool UseCorrectedHeading { get; set; }
-        public bool AdaptiveHeading { get; set; }
-        public bool PerformCourseCorrection = false;
-        public double WantedHeading => UseCorrectedHeading ? AdjustedHeading() : Heading;
-        public readonly EditableInt Angle = 45;
-        public readonly EditableDouble MaxError = 20;
-        public readonly EditableDouble ImpactDelta = 0;
-        public bool AscendOnly = false;
-
-        // a timer to keep track of the time since starting the hop
-        private readonly Stopwatch _hopTimer;
-        public double TimeSinceHop => _hopTimer?.Elapsed.TotalSeconds ?? 0;
-        public double TimeToLand => _landingPredictions.Result != null ? _landingPredictions.Result.endUT - Planetarium.GetUniversalTime() : 0;
+        public double ImpactDistanceToTarget => SurfaceDistance(PredictedImpact.latitude, PredictedImpact.longitude, TargetLatitude, TargetLongitude);
 
         public double Heading => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, Target));
+        public bool AdaptiveHeading { get; set; }
+        public bool UseCorrectedHeading { get; set; }
+        public double CorrectedHeading => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, AdjustedTarget()));
+        public bool PerformCourseCorrection = false;
+        public double WantedHeading => UseCorrectedHeading ? CorrectedHeading : Heading;
+        public EditableInt Angle = 45;
+        public readonly EditableDouble MaxError = 20;
+        public bool AscendOnly = false;
+
+        public Vector3 CurrentRelPosition => core.vessel.mainBody.GetRelSurfacePosition(CurrentLatitude, CurrentLongitude, TargetAltitude);
+        public Vector3 TargetRelPosition => core.vessel.mainBody.GetRelSurfacePosition(TargetLatitude, TargetLongitude, TargetAltitude);
+        public Vector3 ImpactRelPosition => core.vessel.mainBody.GetRelSurfacePosition(PredictedImpact.latitude, PredictedImpact.longitude, TargetAltitude);
+        public Vector3 RelDistanceToTargetVector => TargetRelPosition - CurrentRelPosition;
+        public Vector3 RelDistanceToTargetNormalized => RelDistanceToTargetVector.normalized;
+        public double RelDistance => RelDistanceToTargetVector.magnitude;
+        public Vector3 RelDistanceToImpactVector => ImpactRelPosition - CurrentRelPosition;
+        public double RelDistanceToImpact => Vector3.Dot(RelDistanceToImpactVector, RelDistanceToTargetNormalized);
+        public double RelDistanceToImpactDelta => RelDistance - RelDistanceToImpact;
+
+        private readonly Stopwatch _hopTimer;
+        public double TimeSinceHop => _hopTimer?.Elapsed.TotalSeconds ?? 0;
+        public double TimeToLand => _landingPredictions.Result?.endUT - Planetarium.GetUniversalTime() ?? 0;
+
         public AbsoluteVector PredictedImpact
         {
             get
@@ -47,20 +58,10 @@ namespace MechJebHopper
             }
         }
 
-        public double ImpactDistanceToTarget => SurfaceDistance(PredictedImpact.latitude, PredictedImpact.longitude, TargetLatitude, TargetLongitude);
-
         public HopPilot(MechJebCore core) : base(core)
         {
             _roverController = core.GetComputerModule<MechJebModuleRoverController>();
-            if (_roverController == null)
-            {
-                throw new Exception("[HopGuidanceAscendPilot] Rover controller not found.");
-            }
             _landingPredictions = core.GetComputerModule<MechJebModuleLandingPredictions>();
-            if (_landingPredictions == null)
-            {
-                throw new Exception("[HopGuidanceAscendPilot] Landing predictions not found.");
-            }
             _hopTimer = new Stopwatch();
         }
 
@@ -78,6 +79,8 @@ namespace MechJebHopper
             core.attitude.attitudeDeactivate();
             core.attitude.users.Remove(this);
             _landingPredictions.users.Remove(this);
+            _hopTimer.Stop();
+            _hopTimer.Reset();
         }
 
         public void Hop(object controller)
@@ -101,19 +104,6 @@ namespace MechJebHopper
             return 2 * velocity / (gravity * Math.Sqrt(2)); // seconds
         }
 
-        public double EstimateTimeOfFlight2()
-        {
-            double mu = core.vessel.mainBody.gravParameter; // Gravitational parameter (m^3/s^2)
-            double radiusPlanet = core.vessel.mainBody.Radius; // meters
-
-            double periapsis = radiusPlanet + CurrentAltitude; // meters
-            double apoapsis = periapsis + (DistanceToTarget * Math.Tan(Angle * UtilMath.Deg2Rad)); // meters
-
-            double semiMajorAxis = (periapsis + apoapsis) / 2; // meters
-
-            return Math.PI * Math.Sqrt(Math.Pow(semiMajorAxis, 3) / mu); // seconds
-        }
-
         public Vector3 AdjustedTarget()
         {
             double rotationPeriod = core.vessel.mainBody.rotationPeriod; // seconds
@@ -133,7 +123,6 @@ namespace MechJebHopper
 
             return Target + relativeMovement;
         }
-        public double AdjustedHeading() => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, AdjustedTarget()));
 
         private double SurfaceDistance(double lat1, double lon1, double lat2, double lon2)
         {

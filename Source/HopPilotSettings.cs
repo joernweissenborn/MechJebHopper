@@ -30,13 +30,12 @@ namespace MechJebHopper
 
 
             GuiUtils.SimpleTextBox("Launch Angle", _hopPilot.Angle, "°");
-            _hopPilot.Angle.val = Mathf.Clamp(_hopPilot.Angle.val, 0, 90);
+            _hopPilot.Angle = Mathf.Clamp(_hopPilot.Angle, 0, 90);
 
             GuiUtils.ToggledTextBox(ref _hopPilot.PerformCourseCorrection, "Course Correction", _hopPilot.MaxError, "Max Error[m]", width: 30);
 
             _hopPilot.AscendOnly = GUILayout.Toggle(_hopPilot.AscendOnly, "Ascend Only");
 
-            GuiUtils.SimpleTextBox("Impact Delta", _hopPilot.ImpactDelta, "m");
 
             GUILayout.FlexibleSpace();
 
@@ -104,7 +103,7 @@ namespace MechJebHopper
                 _hopPilot.UseCorrectedHeading = GUILayout.Toggle(_hopPilot.UseCorrectedHeading, "Use Corrected Heading");
                 if (_hopPilot.UseCorrectedHeading)
                 {
-                    GuiUtils.SimpleLabel("Corrected Heading", _hopPilot.AdjustedHeading().ToString("F2") + "°");
+                    GuiUtils.SimpleLabel("Corrected Heading", _hopPilot.CorrectedHeading.ToString("F2") + "°");
                     GuiUtils.SimpleLabel("Estimated Time of Flight", _hopPilot.EstimateTimeOfFlight().ToString("F2") + "s");
                 }
             }
