@@ -41,7 +41,7 @@ namespace MechJebHopper
                 }
                 core.thrust.targetThrottle = targetThrottle;
             }
-            status = $"Hopping at throttle {core.thrust.targetThrottle} at heading {_targetHeading:F3}°";
+            status = $"Hopping at throttle {core.thrust.targetThrottle:F2} at heading {_targetHeading:F3}°";
             return this;
 
         }
