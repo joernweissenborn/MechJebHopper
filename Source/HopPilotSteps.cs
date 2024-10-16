@@ -34,7 +34,12 @@ namespace MechJebHopper
             }
             else
             {
-                core.thrust.targetThrottle = _hopPilot.RelDistanceToImpactDelta < HopPilot.CloseDistance ? 0.1F : 1F;
+                float targetThrottle = 1.0f;
+                if (_hopPilot.RelDistanceToImpactDelta < HopPilot.CloseDistance) {
+                    //Interpolate the throttle between 1 and 0.1 as we get closer to the target
+                    targetThrottle = Mathf.Lerp(0.1f, 1f, (float)(_hopPilot.RelDistanceToImpactDelta / HopPilot.CloseDistance));
+                }
+                core.thrust.targetThrottle = targetThrottle;
             }
             status = $"Hopping at throttle {core.thrust.targetThrottle} at heading {_targetHeading:F3}°";
             return this;
