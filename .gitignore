@@ -4,3 +4,5 @@ dist/
 Plugins/
 .vscode/
 netkan.exe
+*.zip
+*.ckan

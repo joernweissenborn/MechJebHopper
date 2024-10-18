@@ -3,12 +3,14 @@ name: MechJeb Hopper
 license: MIT
 author: Joern Weissenborn
 abstract: MechJeb Hopper is a plugin for Kerbal Space Program that adds a new autopilot to MechJeb, allowing for suborbital hops.
+tags:
+  - 
 $kref: '#/ckan/github/joernweissenborn/MechJebHopper'
 ressources:
   repository: https://github.com/joernweissenborn/MechJebHopper
 ksp_version_min: 1.12
 depends:
-  - MechJeb2
+  - name: MechJeb2
 
 install:
   - find: MechJebHopper

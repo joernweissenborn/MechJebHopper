@@ -1,4 +1,5 @@
-$distPath = "dist/GameData/MechJebHopper/Plugins/"
+$distPath = "dist/GameData/MechJebHopper/"
+$distDllPath = "$distPath/Plugins/"
 $dllPath = "Plugins\net472\MechJebHopper.dll"
 
 # Get the current working directory
@@ -26,10 +27,13 @@ if ($buildOutput -match "Build succeeded.") {
 	}
 
 	# create dist/ folder
-	New-Item -ItemType Directory -Path $distPath -Force
+	New-Item -ItemType Directory -Path $distDllPath -Force
 
 	# copy the built .dll file to the dist/ folder
-	Copy-Item -Path $dllPath -Destination $distPath
+	Copy-Item -Path $dllPath -Destination $distDllPath
+
+	# Copy license
+	Copy-Item -Path "LICENSE" -Destination $distPath
 } else {
 	Write-Host "Build failed. Please check the error messages above."
 }
