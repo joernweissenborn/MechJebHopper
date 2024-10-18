@@ -35,7 +35,8 @@ namespace MechJebHopper
             else
             {
                 float targetThrottle = 1.0f;
-                if (_hopPilot.RelDistanceToImpactDelta < HopPilot.CloseDistance) {
+                if (_hopPilot.RelDistanceToImpactDelta < HopPilot.CloseDistance)
+                {
                     //Interpolate the throttle between 1 and 0.1 as we get closer to the target
                     targetThrottle = Mathf.Lerp(0.1f, 1f, (float)(_hopPilot.RelDistanceToImpactDelta / HopPilot.CloseDistance));
                 }

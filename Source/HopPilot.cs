@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using MuMech;
 using UnityEngine;
+using JetBrains.Annotations;
 
 namespace MechJebHopper
 {
@@ -9,6 +10,21 @@ namespace MechJebHopper
     {
         private readonly MechJebModuleRoverController _roverController;
         private readonly MechJebModuleLandingPredictions _landingPredictions;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public EditableInt Angle = 45;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public bool AscendOnly = false;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public readonly EditableDouble MaxError = 20;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public bool PerformCourseCorrection = false;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public bool UseCorrectedHeading { get; set; }
 
         public static double CloseDistance => 1000;
 
@@ -24,13 +40,8 @@ namespace MechJebHopper
 
         public double Heading => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, Target));
         public bool AdaptiveHeading { get; set; }
-        public bool UseCorrectedHeading { get; set; }
         public double CorrectedHeading => MuUtils.ClampDegrees360(_roverController.HeadingToPos(Current, AdjustedTarget()));
-        public bool PerformCourseCorrection = false;
         public double WantedHeading => UseCorrectedHeading ? CorrectedHeading : Heading;
-        public EditableInt Angle = 45;
-        public readonly EditableDouble MaxError = 20;
-        public bool AscendOnly = false;
 
         public Vector3 CurrentRelPosition => core.vessel.mainBody.GetRelSurfacePosition(CurrentLatitude, CurrentLongitude, TargetAltitude);
         public Vector3 TargetRelPosition => core.vessel.mainBody.GetRelSurfacePosition(TargetLatitude, TargetLongitude, TargetAltitude);
